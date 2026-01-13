@@ -71,22 +71,8 @@ static void* worker_routine(void* arg) {
         
         pthread_mutex_unlock(&pool.lock);
 
-        while (job->progress < 100.0) {
-            pthread_mutex_lock(&job->job_lock);
-            
-            while (job->status == JOB_SUSPENDED) {
-                pthread_cond_wait(&job->resume_cond, &job->job_lock);
-            }
-
-            if (job->status == JOB_REMOVED) {
-                pthread_mutex_unlock(&job->job_lock);
-                break;
-            }
-
-            job->progress += 5.0; 
-            pthread_mutex_unlock(&job->job_lock);
-            usleep(200000);
-        }
+        //Functie Chiper
+        analyze_directory(job->path,job);
 
         pthread_mutex_lock(&job->job_lock);
         if (job->status != JOB_REMOVED) {
