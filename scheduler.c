@@ -78,6 +78,8 @@ static void* worker_routine(void* arg) {
         if (job->status != JOB_REMOVED) {
             job->status = JOB_DONE;
             job->progress = 100.0;
+            printf("Job %d (priority: %d) was finished\n", job->id, job->priority);
+            fflush(stdout);
         }
         pthread_mutex_unlock(&job->job_lock);
     }

@@ -6,8 +6,10 @@
 #include <stdbool.h>
 #include "tree.h"
 
+#include "analyzer.h"
 
-#define MAX_THREADS 4
+
+#define MAX_THREADS 1
 #define MAX_JOBS 100
 
 typedef enum {
@@ -18,7 +20,7 @@ typedef enum {
     JOB_REMOVED
 } JobStatus;
 
-typedef struct {
+typedef struct AnalysisJob{
     int id;
     char path[4096];
     int priority;      

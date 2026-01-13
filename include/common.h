@@ -27,7 +27,7 @@ typedef struct{
 
 typedef struct{
     int status_code;
-    char message[1024];
+    char message[8192];
 } response_t;
 
 #endif 
