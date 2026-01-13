@@ -1,0 +1,6 @@
+build/
+*.o
+*.a
+*.so
+vgcore.*
+.DS_Store
