@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE 700
+#define _XOPEN_SOURCE 700 // POSIX.1-2008, daca scot da crash
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
