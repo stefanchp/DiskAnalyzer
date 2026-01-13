@@ -4,3 +4,4 @@ build/
 *.so
 vgcore.*
 .DS_Store
+tests/
