@@ -2,8 +2,8 @@
 #define ANALYZER_H
 
 #include "tree.h"
-typedef struct AnalysisJob AnalysisJob;
+struct AnalysisJob;
 
-TreeNode *analyze_directory(const char *path, AnalysisJob *job);
+TreeNode *analyze_directory(const char *path, struct AnalysisJob *job);
 
 #endif

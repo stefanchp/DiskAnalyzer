@@ -78,6 +78,8 @@ static void* worker_routine(void* arg) {
         if (job->status != JOB_REMOVED) {
             job->status = JOB_DONE;
             job->progress = 100.0;
+            printf("Job %d (priority: %d) was finished\n", job->id, job->priority);
+            fflush(stdout);
         }
         pthread_mutex_unlock(&job->job_lock);
     }
@@ -110,7 +112,7 @@ int scheduler_add_job(const char *path, int priority) {
     int target_idx = -1;
     for (int i = 0; i < MAX_JOBS; i++) {
         // Dacă am găsit un loc gol (NULL) sau un job care nu mai este necesar
-        if (pool.jobs[i] == NULL || pool.jobs[i]->status == JOB_REMOVED || pool.jobs[i]->status == JOB_DONE) {
+        if (pool.jobs[i] == NULL || pool.jobs[i]->status == JOB_REMOVED) {
             target_idx = i;
             break;
         }
@@ -119,7 +121,7 @@ int scheduler_add_job(const char *path, int priority) {
     // Dacă nu am găsit niciun loc disponibil în toată tabela de 100
     if (target_idx == -1) {
         pthread_mutex_unlock(&pool.lock);
-        return -1; // Coada este cu adevărat plină
+        return -2005; // Coada este cu adevărat plină
     }
 
     // 3. Dacă slotul conținea un job vechi, eliberăm memoria lui înainte de refolosire
