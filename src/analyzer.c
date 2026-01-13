@@ -93,10 +93,13 @@ static int scan_dir_recursive(const char *path, TreeNode *parent, AnalysisJob *j
         return 1;
     }
         
-    errno = 0;
     struct dirent *ent;
-    while ((ent = readdir(d)) != NULL) 
+    while (1) 
     {
+        errno = 0;
+        ent = readdir(d);
+        if (ent == NULL)
+            break;
         if (job_wait_if_suspended(job) || job_should_stop(job)) 
         {
             closedir(d);
@@ -178,7 +181,6 @@ static int scan_dir_recursive(const char *path, TreeNode *parent, AnalysisJob *j
             child->size = 0;
             add_child(parent, child);
             job_inc_files(job);
-            // parent->size += 0;
         }
 
         if (job) 
@@ -196,7 +198,10 @@ static int scan_dir_recursive(const char *path, TreeNode *parent, AnalysisJob *j
         }
     }
     if (errno != 0) 
+    {
+        closedir(d);
         return 1;
+    }
 
     closedir(d);
     return 0;

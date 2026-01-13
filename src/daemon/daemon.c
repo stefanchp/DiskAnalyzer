@@ -33,44 +33,37 @@ void daemonize()
     if (setsid() < 0)
         exit(EXIT_FAILURE);
 
-
+    
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
     open("/dev/null", O_RDONLY);
     open("/dev/null", O_RDWR);
     open("/dev/null", O_RDWR);
-    
 }
 
 
 void serialize_report(TreeNode *node, int depth, uint64_t total_size, char *buffer, size_t *offset, size_t max_len) {
     if (!node || *offset >= max_len - 100) return;
 
-    // Calcul procentaj
     float percent = 0.0f;
     if (total_size > 0) percent = ((float)node->size / (float)total_size) * 100.0f;
 
-    // Calcul bara vizuala (max 20 caractere)
     char bar[21];
     int bar_len = (int)(percent / 5.0f); 
     if (bar_len > 20) bar_len = 20;
     memset(bar, '#', bar_len);
     bar[bar_len] = '\0';
 
-    // Formatare linie
-    // Folosim indentare simpla cu "-"
     char indent[32] = "";
     for(int i=0; i<depth && i<15; i++) strcat(indent, "-");
 
-    // Scriere in buffer la pozitia curenta (*offset)
     int written = snprintf(buffer + *offset, max_len - *offset, 
         "%s/%s %.1f%% (%lu bytes) %s\n", 
         indent, node->name, percent, node->size, bar);
     
     if (written > 0) *offset += written;
 
-    // Recursivitate pentru copii
     TreeNode *child = node->children;
     while (child) {
         serialize_report(child, depth + 1, total_size, buffer, offset, max_len);
@@ -122,8 +115,10 @@ void process_client(int client_fd)
             }
             else if(job->status == JOB_REMOVED) strcpy(status_text, "REMOVED");
             else strcpy(status_text, "UNKNOWN");
-            snprintf(res.message, sizeof(res.message), "ID: %d, Path: %s, Priority: %d, Status: %s, Progress: %.2f%%",
-                     job->id, job->path, job->priority, status_text, job->progress);
+            snprintf(res.message, sizeof(res.message), 
+                "ID: %d\nPath: %s\nPriority: %d\nStatus: %s\nProgress: %.2f%%\nStats: %lu files, %lu dirs",
+                job->id, job->path, job->priority, status_text, job->progress, 
+                job->files_scanned, job->dirs_scanned);
         }
         else
         {
@@ -177,8 +172,10 @@ void process_client(int client_fd)
         for (int i = 0; i < 100; i++) {
             AnalysisJob* job = scheduler_get_job_info(i);
             if (job != NULL && job->status != JOB_REMOVED) {
-                snprintf(buffer, sizeof(buffer), "ID: %d, Path: %.100s, Priority: %d, Status: %d, Progress: %.2f%%\n",
-                         job->id, job->path, job->priority, job->status, job->progress);
+                snprintf(buffer, sizeof(buffer), 
+                    "[ID: %d] Path: %s | Priority: %d | Stat: %d | Progress: %.2f%% | %lu files, %lu dirs\n",
+                    job->id, job->path, job->priority, job->status, job->progress, 
+                    job->files_scanned, job->dirs_scanned);
                 if (strlen(res.message) + strlen(buffer) < sizeof(res.message)) {
                     strcat(res.message, buffer);
                 }
@@ -201,13 +198,12 @@ void process_client(int client_fd)
             snprintf(res.message, sizeof(res.message), "Job ID %d is done but result tree is NULL.", req.id);
         }
         else {
-            // Job is Done, generam raportul
-            size_t offset = 0;
-            snprintf(res.message, sizeof(res.message), "Analysis Report for %s:\n", job->path);
-            offset = strlen(res.message);
-            
-            // Apelam functia helper scrisa mai sus
-            // Pornim cu depth 0 si total_size = dimensiunea radacinii
+            snprintf(res.message, sizeof(res.message), 
+                "Analysis Report for '%s':\nDetails: %lu files, %lu dirs scanned.\n------------------------------------------------\n", 
+                job->path, job->files_scanned, job->dirs_scanned);
+
+            size_t offset = strlen(res.message); 
+
             serialize_report(job->result, 0, job->result->size, res.message, &offset, sizeof(res.message));
         }
     }

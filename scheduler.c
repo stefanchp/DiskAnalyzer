@@ -71,8 +71,12 @@ static void* worker_routine(void* arg) {
         
         pthread_mutex_unlock(&pool.lock);
 
-        //Functie Chiper
-        analyze_directory(job->path,job);
+        //Functie analyze.c
+        TreeNode *aux = analyze_directory(job->path,job);
+        
+        pthread_mutex_lock(&job->job_lock);
+        job->result = aux;
+        pthread_mutex_unlock(&job->job_lock);
 
         pthread_mutex_lock(&job->job_lock);
         if (job->status != JOB_REMOVED) {
@@ -101,50 +105,47 @@ void scheduler_init() {
 int scheduler_add_job(const char *path, int priority) {
     pthread_mutex_lock(&pool.lock);
 
-    // 1. Verificăm conflictul de path (Overlap)
     int conflict_id = check_path_conflict(path);
     if (conflict_id != -1) {
         pthread_mutex_unlock(&pool.lock);
         return -(conflict_id + 1000); 
     }
 
-    // 2. Căutăm un slot liber sau unul care poate fi reciclat
     int target_idx = -1;
     for (int i = 0; i < MAX_JOBS; i++) {
-        // Dacă am găsit un loc gol (NULL) sau un job care nu mai este necesar
         if (pool.jobs[i] == NULL || pool.jobs[i]->status == JOB_REMOVED) {
             target_idx = i;
             break;
         }
     }
 
-    // Dacă nu am găsit niciun loc disponibil în toată tabela de 100
     if (target_idx == -1) {
         pthread_mutex_unlock(&pool.lock);
-        return -2005; // Coada este cu adevărat plină
+        return -2005;
     }
 
-    // 3. Dacă slotul conținea un job vechi, eliberăm memoria lui înainte de refolosire
     if (pool.jobs[target_idx] != NULL) {
         pthread_mutex_destroy(&pool.jobs[target_idx]->job_lock);
         pthread_cond_destroy(&pool.jobs[target_idx]->resume_cond);
         free(pool.jobs[target_idx]);
     }
 
-    // 4. Alocăm noul job în slotul găsit
     AnalysisJob* nj = malloc(sizeof(AnalysisJob));
-    nj->id = target_idx; // ID-ul devine indexul slotului (foarte eficient)
-    strncpy(nj->path, path, 4096);
+    nj->id = target_idx;
+    strncpy(nj->path, path, sizeof(nj->path) - 1);
+    nj->path[sizeof(nj->path) - 1] = '\0';
     nj->priority = (priority < 1) ? 1 : (priority > 3 ? 3 : priority);
     nj->status = JOB_PENDING;
     nj->progress = 0.0;
+    nj->files_scanned = 0;
+    nj->dirs_scanned = 0;
+    nj->result = NULL;
     
     pthread_mutex_init(&nj->job_lock, NULL);
     pthread_cond_init(&nj->resume_cond, NULL);
 
     pool.jobs[target_idx] = nj;
     
-    // Incrementăm count doar dacă am adăugat la finalul listei
     if (target_idx >= pool.count) {
         pool.count = target_idx + 1;
     }
