@@ -172,12 +172,12 @@ void process_client(int client_fd)
     }
     else if(req.type == CMD_LIST)
     {
-        char buffer[100];
+        char buffer[4096];
         strcpy(res.message, "Job List:\n");
         for (int i = 0; i < 100; i++) {
             AnalysisJob* job = scheduler_get_job_info(i);
             if (job != NULL && job->status != JOB_REMOVED) {
-                snprintf(buffer, sizeof(buffer), "ID: %d, Path: %s, Priority: %d, Status: %d, Progress: %.2f%%\n",
+                snprintf(buffer, sizeof(buffer), "ID: %d, Path: %.100s, Priority: %d, Status: %d, Progress: %.2f%%\n",
                          job->id, job->path, job->priority, job->status, job->progress);
                 if (strlen(res.message) + strlen(buffer) < sizeof(res.message)) {
                     strcat(res.message, buffer);
