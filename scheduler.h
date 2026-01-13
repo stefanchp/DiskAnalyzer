@@ -1,8 +1,11 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#include <stdint.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include "tree.h"
+
 
 #define MAX_THREADS 4
 #define MAX_JOBS 100
@@ -21,6 +24,9 @@ typedef struct {
     int priority;      
     JobStatus status;
     float progress;    
+    uint64_t files_scanned;
+    uint64_t dirs_scanned;
+    TreeNode *result;
     
     pthread_mutex_t job_lock;   
     pthread_cond_t resume_cond; 
