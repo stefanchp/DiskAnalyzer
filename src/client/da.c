@@ -157,6 +157,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
+
+    if (optind < argc) {
+        fprintf(stderr, "Eroare: Argument nerecunoscut: '%s'.\n", argv[optind]);
+        fprintf(stderr, "Sugestie: Pentru a analiza un director, foloseste '-a %s'\n", argv[optind]);
+        exit(EXIT_FAILURE);
+    }
+
+    
     // Rezolvarea conflictului pentru flag-ul -p
     if (is_add_action) {
         // Daca utilizatorul a dat -a, atunci -p inseamna PRIORITATE

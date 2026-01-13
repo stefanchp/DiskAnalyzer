@@ -33,14 +33,14 @@ void daemonize()
     if (setsid() < 0)
         exit(EXIT_FAILURE);
 
-    /*
+
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
     open("/dev/null", O_RDONLY);
     open("/dev/null", O_RDWR);
     open("/dev/null", O_RDWR);
-    */
+    
 }
 
 
@@ -226,7 +226,7 @@ int main()
     signal(SIGTERM, cleanup_and_exit);
 
 
-    // daemonize();
+    daemonize();
 
     scheduler_init();
     server_fd = create_server_socket();
