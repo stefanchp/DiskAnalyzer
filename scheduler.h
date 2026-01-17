@@ -8,8 +8,7 @@
 
 #include "analyzer.h"
 
-
-#define MAX_THREADS 1
+#define MAX_THREADS 4
 #define MAX_JOBS 100
 
 typedef enum {
